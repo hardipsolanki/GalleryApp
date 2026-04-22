@@ -1,11 +1,33 @@
 import { string } from "@/constant/string";
 import { Colors } from "@/theme/color";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-const Header = () => {
+import CreateFolderModal from "./CreateFolderModal";
+
+const Header = ({ getAlbums }: { getAlbums: () => void }) => {
   const router = useRouter();
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const handleCreateFolder = async (folderName: string) => {
+    try {
+      const { assets } = await MediaLibrary.getAssetsAsync({
+        mediaType: MediaLibrary.MediaType.photo,
+        first: 1,
+      });
+
+      if (assets.length === 0) return;
+
+      // ✅ Album banavo
+      await MediaLibrary.createAlbumAsync(folderName, assets[0], false);
+
+      getAlbums();
+    } catch (error) {
+      console.log("Error creating folder:", error);
+    }
+  };
   return (
     <View style={styles.conatiner}>
       <View>
@@ -20,7 +42,15 @@ const Header = () => {
         <Text style={styles.headerText}>{string.index.header}</Text>
       </View>
       <View style={styles.iconsConatiner}>
-        <Ionicons name="add" size={24} color={Colors.blackText} />
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <Ionicons name="add" size={24} color={Colors.blackText} />
+        </TouchableOpacity>
+
+        <CreateFolderModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          onCreate={handleCreateFolder}
+        />
         <Ionicons name="hammer" size={24} color={Colors.blackText} />
       </View>
     </View>

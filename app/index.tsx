@@ -2,10 +2,12 @@ import Filters from "@/components/Filters";
 import Folder from "@/components/Folder";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import { ROUTES_PATH } from "@/constant/routesName";
 import { Colors } from "@/theme/color";
 import * as MediaLibrary from "expo-media-library";
+import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import { FlatList, StyleSheet } from "react-native";
+import { FlatList, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type AlbumWithCover = {
@@ -14,7 +16,6 @@ type AlbumWithCover = {
 };
 
 export default function Index() {
-  const [assets, setAssets] = useState<MediaLibrary.Asset[]>([]);
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
   const [albums, setAlbums] = useState<AlbumWithCover[]>([]);
 
@@ -28,8 +29,6 @@ export default function Index() {
       includeSmartAlbums: true,
     });
 
-    console.log("fetchAlbums: ", fetchedAlbums);
-
     const albumsWithCover = await Promise.all(
       fetchedAlbums.map(async (album) => {
         const { assets } = await MediaLibrary.getAssetsAsync({
@@ -38,8 +37,6 @@ export default function Index() {
           first: 1,
           sortBy: "creationTime",
         });
-
-        console.log("accest: ", assets);
 
         return {
           album,
@@ -58,34 +55,56 @@ export default function Index() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList
-        data={albums}
-        ListHeaderComponent={
-          <>
-            <Header />
-            <Filters />
-          </>
-        }
-        ListFooterComponent={<Footer />}
-        renderItem={({ item }) => (
-          <Folder url={item.coverImage || ""} name={item.album.title} />
-        )}
-        numColumns={2}
-        keyExtractor={(item) => item.album.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ gap: 10 }}
-        columnWrapperStyle={{ gap: 10 }}
-      />
+      <View style={styles.listConatiner}>
+        <FlatList
+          data={albums}
+          ListHeaderComponent={
+            <>
+              <Header getAlbums={getAlbums} />
+              <Filters />
+            </>
+          }
+          renderItem={({ item }) => (
+            <Link
+              href={{
+                pathname: ROUTES_PATH.album,
+                params: { albumId: item.album.id },
+              }}
+            >
+              <Folder url={item.coverImage || ""} name={item.album.title} />
+            </Link>
+          )}
+          numColumns={2}
+          keyExtractor={(item) => item.album.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ gap: 10 }}
+          columnWrapperStyle={{ gap: 10 }}
+        />
+      </View>
+      <View style={styles.footer}>
+        <Footer />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  listConatiner: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.background,
+  },
+  footer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+    paddingBottom: 0,
   },
 });

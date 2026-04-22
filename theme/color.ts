@@ -3,4 +3,6 @@ export const Colors = {
     text: "white",
     blackText: "black",
     background: "#f1f1f1",
-}
+    primary: "#007AFF",   // ← iOS blue
+    border: "#E0E0E0",    // ← light gray
+};
